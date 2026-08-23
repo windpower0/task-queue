@@ -141,12 +141,12 @@ curl -X POST http://localhost:8080/tasks/{taskId}/fail \
 
 `TaskService.create` 先按 `idempotency_key` 查询：存在且 `type+payload` 一致则返回原任务；
 不一致抛 `ConflictException(409)`。插入时若并发触发唯一键冲突（`DuplicateKeyException`），
-捕获后重查并比对内容，保证“同 Key 同内容 → 同 ID、同 Key 异内容 → 冲突”的语义。
+捕获后重查并比对内容，保证"同 Key 同内容 → 同 ID、同 Key 异内容 → 冲突"的语义。
 `payload` 在存储前做**规范化（键排序的 JSON）**，与传入顺序无关。
 
 ### 4.2 原子领取（Approach A）
 
-领取是**单条原子 UPDATE**，绝不使用“先查后更新”：
+领取是**单条原子 UPDATE**，绝不使用"先查后更新"：
 
 ```sql
 UPDATE tasks
@@ -159,7 +159,7 @@ WHERE (status='QUEUED' OR (status='RUNNING' AND lease_expires_at < CURRENT_TIMES
 ```
 
 `claimAny(...)` 返回受影响行数，`==1` 即本次领取成功。嵌套派生表（`SELECT ... FROM (SELECT ...) t`）
-规避了 MySQL/H2 对“更新中引用同表”的限制。
+规避了 MySQL/H2 对"更新中引用同表"的限制。
 
 ### 4.3 租约与过期回收
 
@@ -195,16 +195,16 @@ WHERE (status='QUEUED' OR (status='RUNNING' AND lease_expires_at < CURRENT_TIMES
 
 - **单进程 / 单实例**：未做集群与水平扩展（文档 §8 明确为范围外）。多实例共享同一 MySQL 仍可用，
   但吞吐受单条串行化领取影响（见下）。
-- **未使用 SKIP LOCKED**：采用方案 A 的单条 `UPDATE`。在大量任务突发时，每次领取只锁定“队首”一行，
+- **未使用 SKIP LOCKED**：采用方案 A 的单条 `UPDATE`。在大量任务突发时，每次领取只锁定"队首"一行，
   其余 Worker 可能在同一条热点行上轻微争用（head-of-line 效应），靠 Worker 侧重试恢复吞吐。
   若未来需要更高并发，可迁移到支持 `SKIP LOCKED` 的查询（设计上仅需替换 `claimAny` 的 SQL）。
-- **未实现独立 reaper 线程**：过期回收已折叠进领取逻辑（按需回收）。若需要“主动让过期任务尽快重新可见”，
+- **未实现独立 reaper 线程**：过期回收已折叠进领取逻辑（按需回收）。若需要"主动让过期任务尽快重新可见"，
   可补充一个 `@Scheduled` 定时任务周期性触发一次空领取扫描（当前非必需）。
 - **时间一致性**：`lease_expires_at` 与 `CURRENT_TIMESTAMP` 的比较要求数据库会话时区为 UTC。
   MySQL 连接串已带 `serverTimezone=UTC`；应用写入的时间戳统一使用 UTC `LocalDateTime`。
   如在非 UTC 环境运行 MySQL，请确保会话时区为 UTC。
 - **exactly-once 不保证**：文档 §8 将其列为范围外。本服务保证 at-most-one 领取与持久化重试，
-  但“任务副作用的全局恰好一次”需由业务侧幂等处理。
+  但"任务副作用的全局恰好一次"需由业务侧幂等处理。
 - **认证 / 前端 / 生产部署**：均为范围外，未实现。
 
 ---
@@ -214,9 +214,9 @@ WHERE (status='QUEUED' OR (status='RUNNING' AND lease_expires_at < CURRENT_TIMES
 本项目由 **opencode**（AI 编程助手，模型 `hy3-free` / `ox-alpha-free`）在 TDD 模式下协作实现：
 
 - **需求解析**：从 PDF 抽取需求，逐节（§4–§8）整理为可验收的 AC-1~AC-4。
-- **方案设计**：对并发领取给出“数据库原子 UPDATE / Redis 锁 / SELECT…FOR UPDATE”等候选方案并权衡，
+- **方案设计**：对并发领取给出"数据库原子 UPDATE / Redis 锁 / SELECT…FOR UPDATE"等候选方案并权衡，
   最终选定单条原子 UPDATE（Approach A）；对租约回收、防旧 owner 覆盖、时间戳一致性给出明确决策。
 - **实现**：按 `controller / service(+impl) / mapper` 三层 MVC 推进，先写失败测试再实现（AC-1→AC-2→AC-3→AC-4→REFACTOR）。
 - **验证**：`mvn test` 全绿（16/16），含确定性并发断言与幂等/状态流转覆盖。
 
-完整的“AI 对话全过程”即本次会话记录。
+完整的"AI 对话全过程"见 [CONVERSATION.md](https://github.com/windpower0/task-queue/blob/main/CONVERSATION.md)。
