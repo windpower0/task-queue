@@ -220,3 +220,4 @@ WHERE (status='QUEUED' OR (status='RUNNING' AND lease_expires_at < CURRENT_TIMES
 - **验证**：`mvn test` 全绿（16/16），含确定性并发断言与幂等/状态流转覆盖。
 
 完整的"AI 对话全过程"见 [CONVERSATION.md](https://github.com/windpower0/task-queue/blob/main/CONVERSATION.md)。
+原始完整对话记录（含每一轮用户原文与 AI 回复）见 [opencode 分享链接](https://opncd.ai/share/fXI4EM3f)。

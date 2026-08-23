@@ -2,6 +2,8 @@
 
 本文件记录了 opencode（AI 编程助手）与用户协作完成「可靠任务队列与分发服务」mini project 的完整对话过程。
 
+> **原始完整对话记录**（含每一轮用户原文与 AI 回复）见 [opencode 分享链接](https://opncd.ai/share/fXI4EM3f)。
+
 ---
 
 ## 第一轮：需求解析
