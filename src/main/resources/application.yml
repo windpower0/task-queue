@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: reliable-task-queue
+  datasource:
+    url: jdbc:mysql://localhost:3306/taskq?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: root
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+  mybatis-plus:
+    configuration:
+      map-underscore-to-camel-case: true
+    global-config:
+      db-config:
+        id-type: none
+
+# Application tunables
+task:
+  lease:
+    ttl-seconds: 30
+  max-attempts:
+    default: 3
+    upper-bound: 10
+
+server:
+  port: 8080

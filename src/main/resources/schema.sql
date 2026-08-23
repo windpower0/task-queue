@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS tasks (
+  task_id           VARCHAR(36)   PRIMARY KEY,
+  type              VARCHAR(128)  NOT NULL,
+  payload           TEXT          NOT NULL,
+  status            VARCHAR(16)   NOT NULL,
+  max_attempts      INT           NOT NULL,
+  attempt_count     INT           NOT NULL DEFAULT 0,
+  claimed_by        VARCHAR(128),
+  claim_token       VARCHAR(64),
+  lease_expires_at  TIMESTAMP,
+  last_error        TEXT,
+  result            TEXT,
+  completed_at      TIMESTAMP,
+  idempotency_key   VARCHAR(128)  NOT NULL,
+  created_at        TIMESTAMP     NOT NULL,
+  updated_at        TIMESTAMP     NOT NULL,
+  UNIQUE (idempotency_key),
+  UNIQUE (claim_token),
+  INDEX (status, created_at)
+);
